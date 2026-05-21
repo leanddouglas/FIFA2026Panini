@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panini World Cup 2026 Sticker Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  :root {
+    --wc-red: #E31937; --wc-blue: #002B7F; --wc-green: #006847; --wc-gold: #C5A028;
+    --wc-orange: #FF6B35; --wc-dark: #1a1a2e; --wc-card: #16213e; --wc-surface: #0f3460;
+    --wc-text: #e94560; --wc-light: #f0f0f0; --wc-missing: #ff4757;
+    --wc-owned: #2ed573; --wc-dup: #ffa502;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: url('./images/hero.jpg') center top / cover fixed no-repeat;
+    color: var(--wc-light); min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(13,17,23,0.82) 0%, rgba(13,17,23,0.90) 30%, rgba(13,17,23,0.95) 60%, rgba(13,17,23,0.98) 100%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .bg-particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+  .particle { position: absolute; border-radius: 50%; opacity: 0.3; animation: float 15s infinite ease-in-out; }
+  @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.3; } 50% { transform: translateY(-100px) rotate(180deg); opacity: 0.6; } }
+  #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+  .header { position: relative; z-index: 10; background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%); padding: 20px; text-align: center; }
+  .hero-image { width: 100%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(229,57,53,0.3); animation: heroPulse 3s ease-in-out infinite; margin: 0 auto 20px; display: block; }
+  @keyframes heroPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+  .title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2rem, 6vw, 4rem); letter-spacing: 4px; background: linear-gradient(90deg, var(--wc-red), var(--wc-gold), var(--wc-green), var(--wc-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+  .subtitle { font-size: 0.9rem; color: #aaa; letter-spacing: 2px; text-transform: uppercase; }
+
+  .stats-bar { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin: 20px auto; max-width: 900px; z-index: 10; position: relative; }
+  .stat-card { background: rgba(0,0,0,0.35); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 120px; transition: all 0.3s ease; cursor: pointer; }
+  .stat-card:hover { background: rgba(0,0,0,0.5); transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.4); border-color: rgba(197,160,40,0.3); }
+  .stat-value { font-family: 'Bebas Neue'; font-size: 2rem; color: var(--wc-gold); }
+  .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .progress-ring-container { position: relative; width: 80px; height: 80px; margin: 0 auto 8px; }
+  .progress-ring { transform: rotate(-90deg); }
+  .progress-ring-circle { transition: stroke-dashoffset 0.5s ease; }
+  .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Bebas Neue'; font-size: 1.3rem; color: var(--wc-gold); }
+
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 20px auto; z-index: 10; position: relative; padding: 0 20px; }
+  .btn { padding: 12px 16px; border-radius: 10px; border: none; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.25s ease; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary { background: linear-gradient(135deg, var(--wc-red), #b71c1c); color: white; box-shadow: 0 4px 15px rgba(227,25,55,0.4); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(227,25,55,0.6); }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: var(--wc-light); border: 1px solid rgba(255,255,255,0.2); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+  .btn-success { background: linear-gradient(135deg, var(--wc-owned), #27ae60); color: white; box-shadow: 0 4px 15px rgba(46,213,115,0.4); }
+  .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,213,115,0.6); }
+  .btn-gold { background: linear-gradient(135deg, var(--wc-gold), #d4a017); color: #1a1a2e; box-shadow: 0 4px 15px rgba(197,160,40,0.4); }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(197,160,40,0.6); }
+
+  /* Order toggle */
+  .order-toggle { display: flex; justify-content: center; gap: 0; max-width: 320px; margin: 0 auto 16px; z-index: 10; position: relative; }
+  .order-toggle button { flex: 1; padding: 8px 16px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.75rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #888; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+  .order-toggle button:first-child { border-radius: 8px 0 0 8px; }
+  .order-toggle button:last-child { border-radius: 0 8px 8px 0; }
+  .order-toggle button.active { background: var(--wc-gold); color: #1a1a2e; border-color: var(--wc-gold); }
+  .order-toggle button:not(.active):hover { background: rgba(255,255,255,0.1); color: #ccc; }
+
+  .search-section { max-width: 900px; margin: 0 auto 20px; padding: 0 20px; z-index: 10; position: relative; }
+  .search-box { width: 100%; padding: 14px 20px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.35); backdrop-filter: blur(6px); color: var(--wc-light); font-size: 1rem; outline: none; transition: all 0.3s ease; }
+  .search-box:focus { border-color: var(--wc-gold); box-shadow: 0 0 20px rgba(197,160,40,0.2); }
+  .search-box::placeholder { color: #666; }
+  .filter-tabs { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+  .filter-tab { padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+  .filter-tab.active { background: var(--wc-gold); color: var(--wc-dark); border-color: var(--wc-gold); font-weight: 600; }
+  .filter-tab:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
+  .team-filters { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+  .team-chip { padding: 4px 10px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #888; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+  .team-chip:hover, .team-chip.active { background: var(--wc-gold); color: #1a1a2e; border-color: var(--wc-gold); font-weight: 600; }
+
+  .album-container { max-width: 1200px; margin: 0 auto; padding: 20px; z-index: 10; position: relative; }
+
+  /* === DROPDOWN SECTIONS === */
+  .group-dropdown { margin-bottom: 8px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .group-dropdown-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: all 0.2s; user-select: none; border-left: 4px solid var(--wc-gold); }
+  .group-dropdown-header:hover { background: rgba(255,255,255,0.06); }
+  .group-dropdown-header .arrow { width: 20px; height: 20px; transition: transform 0.25s ease; color: var(--wc-gold); flex-shrink: 0; }
+  .group-dropdown-header.open .arrow { transform: rotate(90deg); }
+  .group-dropdown-header .group-letter { font-family: 'Bebas Neue'; font-size: 1.8rem; color: var(--wc-gold); min-width: 36px; text-align: center; }
+  .group-dropdown-header .group-info { flex: 1; }
+  .group-dropdown-header .group-name { font-weight: 700; font-size: 0.95rem; color: #fff; }
+  .group-dropdown-header .group-pages { font-size: 0.75rem; color: #777; }
+  .group-dropdown-header .group-progress { font-family: 'Bebas Neue'; font-size: 1.1rem; color: var(--wc-owned); }
+  .group-dropdown-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease; padding: 0 16px; }
+  .group-dropdown-body.open { max-height: 3000px; padding: 12px 16px 16px; }
+
+  .team-row { margin-bottom: 20px; }
+  .team-row:last-child { margin-bottom: 0; }
+  .team-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 6px 10px; background: rgba(255,255,255,0.06); border-radius: 8px; }
+  .team-name { font-weight: 600; font-size: 0.9rem; color: #ddd; }
+  .team-code { font-size: 0.7rem; color: #666; font-family: monospace; }
+
+  .stickers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+  .sticker-card { aspect-ratio: 3/4; border-radius: 10px; position: relative; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); overflow: hidden; border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+  .sticker-card:hover { transform: translateY(-6px) scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.4); z-index: 5; }
+  .sticker-card.owned { border-color: var(--wc-owned); background: linear-gradient(135deg, rgba(46,213,115,0.18), rgba(46,213,115,0.08)); box-shadow: 0 4px 15px rgba(46,213,115,0.25); }
+  .sticker-card.owned::after { content: ''; position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%232ed573'/%3E%3Cpath d='M8 12l3 3 5-6' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+  .sticker-card.duplicate { border-color: var(--wc-dup); background: linear-gradient(135deg, rgba(255,165,2,0.18), rgba(255,165,2,0.08)); }
+  .sticker-card.duplicate::after { content: attr(data-dups); position: absolute; top: 4px; right: 4px; background: var(--wc-dup); color: #1a1a2e; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; padding: 0 4px; }
+  .sticker-card.missing { border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.25); opacity: 0.75; }
+  .sticker-card.missing:hover { opacity: 1; }
+  .sticker-code { font-family: 'Bebas Neue'; font-size: 1.3rem; color: var(--wc-gold); letter-spacing: 1px; }
+  .sticker-number { font-size: 0.7rem; color: #777; margin-top: 2px; }
+  .sticker-page { font-size: 0.65rem; color: #555; margin-top: 4px; }
+  .sticker-actions { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 0; opacity: 0; transition: opacity 0.2s; }
+  .sticker-card:hover .sticker-actions { opacity: 1; }
+  .sticker-action-btn { flex: 1; padding: 6px; border: none; cursor: pointer; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; transition: all 0.2s; }
+  .sticker-action-btn.own { background: var(--wc-owned); color: white; }
+  .sticker-action-btn.dup { background: var(--wc-dup); color: #1a1a2e; }
+  .sticker-action-btn.miss { background: var(--wc-missing); color: white; }
+  .sticker-action-btn:hover { filter: brightness(1.2); }
+
+  .quick-add { display: flex; gap: 8px; align-items: center; max-width: 900px; margin: 0 auto 20px; padding: 0 20px; }
+  .quick-add input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.35); backdrop-filter: blur(6px); color: var(--wc-light); font-size: 0.9rem; outline: none; }
+  .quick-add input:focus { border-color: var(--wc-gold); }
+  .quick-add .btn { white-space: nowrap; }
+
+  /* Pack overlay */
+  .pack-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+  .pack-overlay.active { display: flex; }
+  .pack-wrapper { perspective: 1000px; margin-bottom: 30px; }
+  .pack { width: 200px; height: 280px; background: linear-gradient(135deg, #d4a017, #c5a028, #d4a017); border-radius: 12px; position: relative; transform-style: preserve-3d; animation: packShake 0.5s ease-in-out 3; box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; flex-direction: column; border: 3px solid rgba(255,255,255,0.3); }
+  .pack::before { content: ''; position: absolute; top: -10px; left: 10px; right: 10px; height: 20px; background: linear-gradient(90deg, #b8860b, #d4a017, #b8860b); border-radius: 4px; transform: translateZ(-10px); }
+  @keyframes packShake { 0%,100% { transform: rotateY(0); } 25% { transform: rotateY(-15deg); } 75% { transform: rotateY(15deg); } }
+  .pack-logo { font-family: 'Bebas Neue'; font-size: 1.5rem; color: #1a1a2e; text-align: center; margin-bottom: 10px; }
+  .pack-text { font-size: 0.8rem; color: #333; text-align: center; font-weight: 600; }
+  .pack-stickers { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 600px; opacity: 0; transform: translateY(50px); transition: all 0.6s ease; }
+  .pack-stickers.reveal { opacity: 1; transform: translateY(0); }
+  .pack-sticker-reveal { width: 100px; aspect-ratio: 3/4; background: linear-gradient(135deg, #fff, #f0f0f0); border-radius: 10px; border: 2px solid var(--wc-gold); display: flex; flex-direction: column; align-items: center; justify-content: center; animation: stickerPop 0.4s ease-out forwards; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  @keyframes stickerPop { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 70% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+  .pack-sticker-reveal .code { font-family: 'Bebas Neue'; font-size: 1.2rem; color: var(--wc-dark); }
+  .pack-sticker-reveal .status { font-size: 0.65rem; margin-top: 4px; padding: 2px 8px; border-radius: 10px; }
+  .pack-sticker-reveal .status.new { background: var(--wc-owned); color: white; }
+  .pack-sticker-reveal .status.dup { background: var(--wc-dup); color: #1a1a2e; }
+
+  /* Modals */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--wc-card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); max-width: 600px; width: 90%; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; animation: modalIn 0.3s ease; }
+  @keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+  .modal-title { font-family: 'Bebas Neue'; font-size: 1.5rem; color: var(--wc-gold); display: flex; align-items: center; gap: 8px; }
+  .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px; justify-content: flex-end; }
+  .missing-list { columns: 3; column-gap: 16px; }
+  .missing-item { break-inside: avoid; padding: 4px 0; font-size: 0.85rem; color: #ccc; border-bottom: 1px dotted rgba(255,255,255,0.05); }
+  .missing-item .code { color: var(--wc-gold); font-weight: 600; }
+  .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .trade-section h4 { font-family: 'Bebas Neue'; font-size: 1.2rem; color: var(--wc-owned); margin-bottom: 10px; }
+  .trade-section.want h4 { color: var(--wc-missing); }
+  .trade-stickers { display: flex; flex-wrap: wrap; gap: 6px; }
+  .trade-chip { padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 500; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa; cursor: pointer; transition: all 0.2s; }
+  .trade-chip:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .trade-chip.have { border-color: var(--wc-owned); color: var(--wc-owned); }
+  .trade-chip.want { border-color: var(--wc-missing); color: var(--wc-missing); }
+
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 10001; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 12px 20px; border-radius: 10px; background: var(--wc-card); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.9rem; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; box-shadow: 0 8px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; max-width: 300px; }
+  @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes toastOut { to { transform: translateX(100%); opacity: 0; } }
+
+  .achievement { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); z-index: 10002; background: linear-gradient(135deg, var(--wc-gold), #d4a017); color: #1a1a2e; padding: 16px 30px; border-radius: 50px; font-weight: 700; font-size: 1rem; box-shadow: 0 10px 40px rgba(197,160,40,0.5); animation: achievementDrop 0.6s ease forwards, achievementFloat 2s ease 0.6s infinite; display: none; align-items: center; gap: 10px; }
+  .achievement.show { display: flex; }
+  @keyframes achievementDrop { to { transform: translateX(-50%) translateY(0); } }
+  @keyframes achievementFloat { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-8px); } }
+  .completion-celebration { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10003; pointer-events: none; display: none; align-items: center; justify-content: center; flex-direction: column; background: rgba(0,0,0,0.7); }
+  .completion-celebration.active { display: flex; }
+  .trophy { font-size: 8rem; animation: trophyBounce 1s ease infinite; filter: drop-shadow(0 0 30px var(--wc-gold)); }
+  @keyframes trophyBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+  .completion-text { font-family: 'Bebas Neue'; font-size: 3rem; color: var(--wc-gold); text-align: center; margin-top: 20px; text-shadow: 0 0 40px rgba(197,160,40,0.5); }
+  .export-area { width: 100%; min-height: 200px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #ccc; font-family: monospace; font-size: 0.8rem; resize: vertical; }
+
+  /* Sound & Music toggles */
+  .sound-toggle { position: fixed; bottom: 20px; left: 20px; z-index: 100; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 1rem; }
+  .sound-toggle:hover { background: rgba(255,255,255,0.1); }
+  .sound-toggle.muted { opacity: 0.5; }
+  .music-toggle { position: fixed; bottom: 20px; left: 72px; z-index: 100; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: var(--wc-gold); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 1rem; }
+  .music-toggle:hover { background: rgba(255,255,255,0.1); }
+  .music-toggle.playing { background: rgba(197,160,40,0.15); border-color: rgba(197,160,40,0.4); }
+  .music-toggle svg { width: 20px; height: 20px; }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--wc-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--wc-surface); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--wc-gold); }
+
+  @media (max-width: 768px) {
+    .controls { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stickers-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+    .missing-list { columns: 2; }
+    .trade-grid { grid-template-columns: 1fr; }
+    .stat-card { min-width: 100px; padding: 10px 14px; }
+    .group-dropdown-header .group-name { font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-particles" id="particles"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="achievement" id="achievement">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L8 8H16L12 2Z" fill="#1a1a2e"/><path d="M7 8H17V10C17 13 15 16 12 17V20H10V17C7 16 5 13 5 10V8Z" fill="#1a1a2e" stroke="#1a1a2e" stroke-width="0.5"/><rect x="9" y="20" width="6" height="2" rx="1" fill="#1a1a2e"/></svg>
+  <span id="achievement-text">Achievement Unlocked!</span>
+</div>
+
+<div class="completion-celebration" id="completion-celebration">
+  <div class="trophy">
+    <svg width="120" height="120" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="tg" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#d4a017"/><stop offset="1" stop-color="#C5A028"/></linearGradient></defs><path d="M5 4h14v3c0 5-3 9-7 9S5 12 5 7V4z" fill="url(#tg)" stroke="#b8860b" stroke-width="0.5"/><rect x="9" y="16" width="6" height="3" rx="1" fill="#C5A028"/><rect x="10" y="19" width="4" height="3" rx="1" fill="#C5A028"/><path d="M3 6h2v1c0 3-1 5-2 5M21 6h-2v1c0 3 1 5 2 5" stroke="#C5A028" stroke-width="1" fill="none"/></svg>
+  </div>
+  <div class="completion-text">ALBUM COMPLETE!</div>
+  <div style="color:#888;margin-top:8px;font-size:1rem;">980 / 980 Stickers Collected</div>
+</div>
+
+<div class="pack-overlay" id="pack-overlay">
+  <div class="pack-wrapper">
+    <div class="pack" id="pack">
+      <svg width="50" height="50" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v3c0 5-3 9-7 9S5 12 5 7V4z" fill="#1a1a2e" stroke="#1a1a2e" stroke-width="0.5"/><rect x="9" y="16" width="6" height="2" rx="1" fill="#1a1a2e"/><rect x="10" y="18" width="4" height="2" rx="1" fill="#1a1a2e"/></svg>
+      <div class="pack-logo">PANINI</div>
+      <div class="pack-text">FIFA WORLD CUP<br>2026</div>
+      <div style="font-size:0.65rem;color:#555;margin-top:6px;font-weight:600;">5 Stickers</div>
+    </div>
+  </div>
+  <div class="pack-stickers" id="pack-stickers"></div>
+  <button class="btn btn-success" onclick="closePack()" style="margin-top:20px;display:none;" id="pack-close-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#fff"/><path d="M8 12l3 3 5-6" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    AWESOME!
+  </button>
+</div>
+
+<div class="header">
+  <img src="./images/hero.jpg" alt="FIFA World Cup 2026" class="hero-image" id="hero-img">
+  <div class="title">STICKER TRACKER 2026</div>
+  <div class="subtitle">Canada &middot; Mexico &middot; USA &middot; 980 Stickers &middot; 48 Teams</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card" onclick="showView('all')">
+    <div class="progress-ring-container">
+      <svg class="progress-ring" width="80" height="80">
+        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/>
+        <circle class="progress-ring-circle" id="progress-ring" cx="40" cy="40" r="34" fill="none" stroke="var(--wc-gold)" stroke-width="6" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+      </svg>
+      <div class="progress-text" id="progress-percent">0%</div>
+    </div>
+    <div class="stat-label">Complete</div>
+  </div>
+  <div class="stat-card" onclick="showView('owned')">
+    <div class="stat-value" id="stat-owned" style="color:var(--wc-owned)">0</div>
+    <div class="stat-label">Owned</div>
+  </div>
+  <div class="stat-card" onclick="showView('missing')">
+    <div class="stat-value" id="stat-missing" style="color:var(--wc-missing)">980</div>
+    <div class="stat-label">Missing</div>
+  </div>
+  <div class="stat-card" onclick="showView('duplicates')">
+    <div class="stat-value" id="stat-duplicates" style="color:var(--wc-dup)">0</div>
+    <div class="stat-label">Duplicates</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="stat-packs" style="color:var(--wc-blue)">0</div>
+    <div class="stat-label">Packs Opened</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" onclick="openPack()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="16" rx="2" fill="none" stroke="white" stroke-width="1.5"/><rect x="3" y="6" width="18" height="5" fill="rgba(255,255,255,0.2)"/><path d="M8 6L12 2L16 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="14" r="3" stroke="white" stroke-width="1" fill="none"/><path d="M12 11v6M9 14h6" stroke="white" stroke-width="1"/></svg>
+    Open Pack
+  </button>
+  <button class="btn btn-success" onclick="showModal('missing-modal')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="white" stroke-width="1.5" fill="none"/><line x1="8" y1="8" x2="16" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="12" x2="14" y2="12" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="15" x2="15" y2="15" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.7"/><circle cx="17" cy="17" r="4" fill="var(--wc-missing)"/><text x="17" y="19.5" text-anchor="middle" fill="white" font-size="6" font-weight="bold">?</text></svg>
+    Missing List
+  </button>
+  <button class="btn btn-gold" onclick="showModal('trade-modal')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 8h12V6l4 3-4 3V10H4V8z" fill="#1a1a2e"/><path d="M20 16H8v2l-4-3 4-3v2h12v2z" fill="#1a1a2e"/></svg>
+    Trade Board
+  </button>
+  <button class="btn btn-secondary" onclick="showModal('export-modal')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="10" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/><path d="M12 11v6M9 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Backup
+  </button>
+  <button class="btn btn-secondary" onclick="resetAll()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12C4 7 8 4 12 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M20 12C20 17 16 20 12 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M8 6l-3 2 2 3M16 18l3-2-2-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Reset
+  </button>
+  <button class="btn btn-secondary" onclick="showModal('help-modal')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" fill="currentColor" font-family="Bebas Neue" font-size="12" font-weight="bold">?</text></svg>
+    Help
+  </button>
+</div>
+
+<div class="order-toggle">
+  <button id="order-table" class="active" onclick="setSortOrder('table')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><rect x="3" y="4" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="4" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="14" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    Table Order
+  </button>
+  <button id="order-alpha" onclick="setSortOrder('alpha')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M6 4v16M6 4l4 4M6 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 16l3-12 3 12M15.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    A-Z Order
+  </button>
+</div>
+
+<div class="quick-add">
+  <input type="text" id="quick-add-input" placeholder="Quick add: type codes like CAN1,CAN2,MEX5..." onkeydown="if(event.key==='Enter')quickAdd()">
+  <button class="btn btn-success" onclick="quickAdd()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="white"/><path d="M12 7v10M7 12h10" stroke="#27ae60" stroke-width="2" stroke-linecap="round"/></svg>
+    Add
+  </button>
+</div>
+
+<div class="search-section">
+  <input type="text" class="search-box" id="search-input" placeholder="Search by team, group, sticker code (e.g. CAN1), or page number..." oninput="filterStickers()">
+  <div class="filter-tabs">
+    <div class="filter-tab active" onclick="setFilter('all')">All</div>
+    <div class="filter-tab" onclick="setFilter('owned')">Owned</div>
+    <div class="filter-tab" onclick="setFilter('missing')">Missing</div>
+    <div class="filter-tab" onclick="setFilter('duplicates')">Duplicates</div>
+    <div class="filter-tab" onclick="setFilter('intro')">Intro</div>
+    <div class="filter-tab" onclick="setFilter('museum')">Museum</div>
+    <div class="filter-tab" onclick="setFilter('promo')">Promo</div>
+  </div>
+  <div class="team-filters" id="team-filters"></div>
+</div>
+
+<div class="album-container" id="album"></div>
+
+<div class="toast-container" id="toasts"></div>
+
+<button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Sound effects">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 9v6h4l5 4V5L9 9H5z" fill="currentColor"/><path d="M17 8c1.5 1.5 1.5 6.5 0 8M20 5c3 3 3 13 0 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+</button>
+
+<button class="music-toggle" id="music-toggle" onclick="toggleMusic()" title="Background music">
+  <svg id="music-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+  <svg id="music-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" style="display:none;"><path d="M9 18V5l10-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M20 4v16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+</button>
+
+<!-- Modals -->
+<div class="modal-overlay" id="missing-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="#C5A028" stroke-width="1.5" fill="none"/><line x1="8" y1="8" x2="16" y2="8" stroke="#C5A028" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="12" x2="14" y2="12" stroke="#C5A028" stroke-width="1" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="15" x2="15" y2="15" stroke="#C5A028" stroke-width="1" stroke-linecap="round" opacity="0.7"/><circle cx="17" cy="17" r="4" fill="var(--wc-missing)"/><text x="17" y="19.5" text-anchor="middle" fill="white" font-size="6" font-weight="bold">?</text></svg>
+        Missing Stickers
+      </div>
+      <button class="modal-close" onclick="closeModal('missing-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="missing-list" id="missing-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="printMissing()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="15" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="8" y1="20" x2="16" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Print
+      </button>
+      <button class="btn btn-primary" onclick="closeModal('missing-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="trade-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 8h12V6l4 3-4 3V10H4V8z" fill="#C5A028"/><path d="M20 16H8v2l-4-3 4-3v2h12v2z" fill="#C5A028"/></svg>
+        Trade Board
+      </div>
+      <button class="modal-close" onclick="closeModal('trade-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="trade-grid">
+        <div class="trade-section">
+          <h4>I Have (Duplicates)</h4>
+          <div class="trade-stickers" id="trade-have"></div>
+        </div>
+        <div class="trade-section want">
+          <h4>I Need</h4>
+          <div class="trade-stickers" id="trade-need"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('trade-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="export-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="2" stroke="#C5A028" stroke-width="1.5" fill="none"/><path d="M12 8v8M9 11l3-3 3 3" stroke="#C5A028" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="7" x2="14" y2="7" stroke="#C5A028" stroke-width="1" opacity="0.5"/></svg>
+        Backup & Restore
+      </div>
+      <button class="modal-close" onclick="closeModal('export-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:12px;color:#aaa;font-size:0.85rem;">Copy this JSON to save your progress, or paste a backup to restore:</p>
+      <textarea class="export-area" id="export-area" readonly></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-success" onclick="copyExport()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="8" y="2" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="4" y="8" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          Copy
+        </button>
+        <button class="btn btn-primary" onclick="downloadExport()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12M8 11l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="5" y1="20" x2="19" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Download
+        </button>
+      </div>
+      <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
+        <p style="margin-bottom:8px;color:#aaa;font-size:0.85rem;">Paste backup JSON to restore:</p>
+        <textarea class="export-area" id="import-area" placeholder="Paste your backup JSON here..."></textarea>
+        <button class="btn btn-primary" onclick="importData()" style="margin-top:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 15V3M8 7l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="5" y1="20" x2="19" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Restore
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('export-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="help-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#C5A028" stroke-width="2" fill="none"/><text x="12" y="17" text-anchor="middle" fill="#C5A028" font-family="Bebas Neue" font-size="14" font-weight="bold">?</text></svg>
+        How to Use
+      </div>
+      <button class="modal-close" onclick="closeModal('help-modal')">&times;</button>
+    </div>
+    <div class="modal-body" style="line-height:1.8;color:#ccc;font-size:0.9rem;">
+      <p><strong>Click a sticker</strong> to cycle: Missing &rarr; Owned &rarr; Duplicate</p>
+      <p><strong>Open Pack</strong> simulates opening a real Panini pack with 5 random stickers!</p>
+      <p><strong>Quick Add</strong> lets you type codes like "CAN1,CAN2,MEX5" to bulk-add stickers</p>
+      <p><strong>Missing List</strong> shows all stickers you don't have, ready to print</p>
+      <p><strong>Trade Board</strong> shows your duplicates and missing stickers for trading</p>
+      <p><strong>Backup</strong> exports your collection as JSON &mdash; save it safely!</p>
+      <p><strong>Table/A-Z</strong> toggle switches between album group order and alphabetical</p>
+      <p><strong>Music</strong> button plays official FIFA World Cup 2026 songs on shuffle</p>
+      <p style="margin-top:12px;color:var(--wc-gold);">Collect them all! 980 stickers across 48 teams + Intro + Museum + Promo</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('help-modal')">Got it!</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TEAMS = [
+  { code: "MEX", name: "Mexico", group: "A", pages: "8-9", flag: "\ud83c\uddf2\ud83c\uddfd" },
+  { code: "RSA", name: "South Africa", group: "A", pages: "10-11", flag: "\ud83c\uddff\ud83c\udde6" },
+  { code: "KOR", name: "South Korea", group: "A", pages: "12-13", flag: "\ud83c\uddf0\ud83c\uddf7" },
+  { code: "CZE", name: "Czechia", group: "A", pages: "14-15", flag: "\ud83c\udde8\ud83c\uddff" },
+  { code: "CAN", name: "Canada", group: "B", pages: "16-17", flag: "\ud83c\udde8\ud83c\udde6" },
+  { code: "BIH", name: "Bosnia and Herzegovina", group: "B", pages: "18-19", flag: "\ud83c\udde7\ud83c\udde6" },
+  { code: "QAT", name: "Qatar", group: "B", pages: "20-21", flag: "\ud83c\uddf6\ud83c\udde6" },
+  { code: "SUI", name: "Switzerland", group: "B", pages: "22-23", flag: "\ud83c\udde8\ud83c\udded" },
+  { code: "BRA", name: "Brazil", group: "C", pages: "24-25", flag: "\ud83c\udde7\ud83c\uddf7" },
+  { code: "MAR", name: "Morocco", group: "C", pages: "26-27", flag: "\ud83c\uddf2\ud83c\udde6" },
+  { code: "HAI", name: "Haiti", group: "C", pages: "28-29", flag: "\ud83c\udded\ud83c\uddf9" },
+  { code: "SCO", name: "Scotland", group: "C", pages: "30-31", flag: "\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc73\udb40\udc63\udb40\udc74\udb40\udc7f" },
+  { code: "USA", name: "USA", group: "D", pages: "32-33", flag: "\ud83c\uddfa\ud83c\uddf8" },
+  { code: "PAR", name: "Paraguay", group: "D", pages: "34-35", flag: "\ud83c\uddf5\ud83c\uddfe" },
+  { code: "AUS", name: "Australia", group: "D", pages: "36-37", flag: "\ud83c\udde6\ud83c\uddfa" },
+  { code: "TUR", name: "Turkiye", group: "D", pages: "38-39", flag: "\ud83c\uddf9\ud83c\uddf7" },
+  { code: "GER", name: "Germany", group: "E", pages: "40-41", flag: "\ud83c\udde9\ud83c\uddea" },
+  { code: "CUW", name: "Curacao", group: "E", pages: "42-43", flag: "\ud83c\udde8\ud83c\uddfc" },
+  { code: "CIV", name: "Ivory Coast", group: "E", pages: "44-45", flag: "\ud83c\udde8\ud83c\uddee" },
+  { code: "ECU", name: "Ecuador", group: "E", pages: "46-47", flag: "\ud83c\uddea\ud83c\udde8" },
+  { code: "NED", name: "Netherlands", group: "F", pages: "48-49", flag: "\ud83c\uddf3\ud83c\uddf1" },
+  { code: "JPN", name: "Japan", group: "F", pages: "50-51", flag: "\ud83c\uddef\ud83c\uddf5" },
+  { code: "SWE", name: "Sweden", group: "F", pages: "52-53", flag: "\ud83c\uddf8\ud83c\uddea" },
+  { code: "TUN", name: "Tunisia", group: "F", pages: "54-55", flag: "\ud83c\uddf9\ud83c\uddf3" },
+  { code: "BEL", name: "Belgium", group: "G", pages: "56-57", flag: "\ud83c\udde7\ud83c\uddea" },
+  { code: "EGY", name: "Egypt", group: "G", pages: "58-59", flag: "\ud83c\uddea\ud83c\uddec" },
+  { code: "IRN", name: "Iran", group: "G", pages: "60-61", flag: "\ud83c\uddee\ud83c\uddf7" },
+  { code: "NZL", name: "New Zealand", group: "G", pages: "62-63", flag: "\ud83c\uddf3\ud83c\uddff" },
+  { code: "ESP", name: "Spain", group: "H", pages: "64-65", flag: "\ud83c\uddea\ud83c\uddf8" },
+  { code: "CPV", name: "Cape Verde", group: "H", pages: "66-67", flag: "\ud83c\udde8\ud83c\uddfb" },
+  { code: "KSA", name: "Saudi Arabia", group: "H", pages: "68-69", flag: "\ud83c\uddf8\ud83c\udde6" },
+  { code: "URU", name: "Uruguay", group: "H", pages: "70-71", flag: "\ud83c\uddfa\ud83c\uddfe" },
+  { code: "FRA", name: "France", group: "I", pages: "72-73", flag: "\ud83c\uddeb\ud83c\uddf7" },
+  { code: "SEN", name: "Senegal", group: "I", pages: "74-75", flag: "\ud83c\uddf8\ud83c\uddf3" },
+  { code: "IRQ", name: "Iraq", group: "I", pages: "76-77", flag: "\ud83c\uddee\ud83c\uddf6" },
+  { code: "NOR", name: "Norway", group: "I", pages: "78-79", flag: "\ud83c\uddf3\ud83c\uddf4" },
+  { code: "ARG", name: "Argentina", group: "J", pages: "80-81", flag: "\ud83c\udde6\ud83c\uddf7" },
+  { code: "ALG", name: "Algeria", group: "J", pages: "82-83", flag: "\ud83c\udde9\ud83c\uddf9" },
+  { code: "AUT", name: "Austria", group: "J", pages: "84-85", flag: "\ud83c\udde6\ud83c\uddf9" },
+  { code: "JOR", name: "Jordan", group: "J", pages: "86-87", flag: "\ud83c\uddef\ud83c\uddf4" },
+  { code: "POR", name: "Portugal", group: "K", pages: "90-91", flag: "\ud83c\uddf5\ud83c\uddf9" },
+  { code: "COD", name: "Congo DR", group: "K", pages: "92-93", flag: "\ud83c\udde8\ud83c\udde9" },
+  { code: "UZB", name: "Uzbekistan", group: "K", pages: "94-95", flag: "\ud83c\uddfa\ud83c\uddff" },
+  { code: "COL", name: "Colombia", group: "K", pages: "96-97", flag: "\ud83c\udde8\ud83c\uddf4" },
+  { code: "ENG", name: "England", group: "L", pages: "98-99", flag: "\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f" },
+  { code: "CRO", name: "Croatia", group: "L", pages: "100-101", flag: "\ud83c\udded\ud83c\uddf7" },
+  { code: "GHA", name: "Ghana", group: "L", pages: "102-103", flag: "\ud83c\uddec\ud83c\udded" },
+  { code: "PAN", name: "Panama", group: "L", pages: "104-105", flag: "\ud83c\uddf5\ud83c\udde6" },
+];
+
+const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+let stickers = [];
+let collection = {};
+let packsOpened = 0;
+let soundEnabled = true;
+let currentFilter = 'all';
+let searchQuery = '';
+let sortOrder = 'table'; // 'table' or 'alpha'
+let musicAudio = null;
+let musicPlaying = false;
+let musicTracks = ['./music/Echo.mp3','./music/lighter.mp3','./music/illuminate.mp3','./music/por-ella.mp3','./music/dai-dai.mp3'];
+let musicOrder = [];
+let musicIndex = 0;
+let openDropdowns = new Set(); // Track which dropdowns are open
+
+function init() {
+  generateStickers();
+  loadFromStorage();
+  renderTeamFilters();
+  renderAlbum();
+  updateStats();
+  createParticles();
+  setupConfetti();
+  initMusic();
+  // Load hero image from localStorage if saved, or try the file
+  const savedImg = localStorage.getItem('panini2026-hero');
+  if (savedImg) { document.getElementById('hero-img').src = savedImg; }
+}
+
+// ===================== MUSIC PLAYER =====================
+function shuffleTracks() {
+  musicOrder = [0,1,2,3,4].sort(() => Math.random() - 0.5);
+  musicIndex = 0;
+}
+
+function initMusic() {
+  shuffleTracks();
+  musicAudio = new Audio();
+  musicAudio.volume = 0.35;
+  musicAudio.addEventListener('ended', playNextTrack);
+  // Autoplay on first user interaction
+  document.addEventListener('click', tryAutoPlay, { once: true });
+}
+
+function tryAutoPlay() {
+  if (!musicPlaying) {
+    playNextTrack();
+  }
+}
+
+function playNextTrack() {
+  if (musicIndex >= musicOrder.length) { shuffleTracks(); }
+  const trackIdx = musicOrder[musicIndex++];
+  musicAudio.src = musicTracks[trackIdx];
+  musicAudio.play().then(() => {
+    musicPlaying = true;
+    updateMusicButton();
+  }).catch(() => {
+    musicPlaying = false;
+    updateMusicButton();
+  });
+}
+
+function toggleMusic() {
+  if (!musicAudio) return;
+  if (musicPlaying) {
+    musicAudio.pause();
+    musicPlaying = false;
+  } else {
+    if (!musicAudio.src) playNextTrack();
+    else musicAudio.play().then(() => { musicPlaying = true; updateMusicButton(); }).catch(() => {});
+  }
+  updateMusicButton();
+}
+
+function updateMusicButton() {
+  const btn = document.getElementById('music-toggle');
+  const iconOff = document.getElementById('music-icon-off');
+  const iconOn = document.getElementById('music-icon-on');
+  btn.classList.toggle('playing', musicPlaying);
+  iconOff.style.display = musicPlaying ? 'none' : 'block';
+  iconOn.style.display = musicPlaying ? 'block' : 'none';
+}
+
+// ===================== SORT ORDER TOGGLE =====================
+function setSortOrder(order) {
+  sortOrder = order;
+  document.getElementById('order-table').classList.toggle('active', order === 'table');
+  document.getElementById('order-alpha').classList.toggle('active', order === 'alpha');
+  renderAlbum();
+}
+
+// ===================== STICKER DATA =====================
+function generateStickers() {
+  stickers = [];
+  let globalNum = 1;
+  stickers.push({ code: "00", type: "intro", group: "Intro", team: "Album Cover", teamCode: null, page: 1, num: globalNum++ });
+  for (let i = 1; i <= 8; i++) {
+    stickers.push({ code: `FWC${i}`, type: "intro", group: "Intro", team: "FIFA World Cup", teamCode: null, page: Math.ceil(i/3)+1, num: globalNum++ });
+  }
+  TEAMS.forEach(team => {
+    for (let i = 1; i <= 20; i++) {
+      stickers.push({
+        code: `${team.code}${i}`, type: "team", group: team.group,
+        team: team.name, teamCode: team.code,
+        page: parseInt(team.pages.split('-')[0]) + Math.floor((i-1)/10),
+        num: globalNum++, flag: team.flag
+      });
+    }
+  });
+  for (let i = 1; i <= 4; i++) {
+    stickers.push({ code: `PR${i}`, type: "promo", group: "Promo", team: "Coca-Cola Promo", teamCode: null, page: 88 + Math.floor((i-1)/2), num: globalNum++ });
+  }
+  for (let i = 9; i <= 19; i++) {
+    stickers.push({ code: `FWC${i}`, type: "museum", group: "Museum", team: "FIFA Museum", teamCode: null, page: 106 + Math.floor((i-9)/4), num: globalNum++ });
+  }
+}
+
+function saveToStorage() {
+  localStorage.setItem('panini2026', JSON.stringify({ collection, packsOpened, timestamp: Date.now() }));
+}
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('panini2026');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      collection = data.collection || {};
+      packsOpened = data.packsOpened || 0;
+    } catch(e) { collection = {}; packsOpened = 0; }
+  }
+}
+
+function renderTeamFilters() {
+  document.getElementById('team-filters').innerHTML = TEAMS.map(t =>
+    `<div class="team-chip" onclick="filterByTeam('${t.code}')" data-team="${t.code}">
+      <span class="flag">${t.flag}</span> ${t.code}
+    </div>`
+  ).join('');
+}
+
+// ===================== DROPDOWN RENDERING =====================
+function toggleDropdown(groupKey) {
+  const body = document.getElementById('dropdown-body-' + groupKey);
+  const header = document.getElementById('dropdown-header-' + groupKey);
+  const isOpen = body.classList.contains('open');
+  if (isOpen) {
+    body.classList.remove('open');
+    header.classList.remove('open');
+    openDropdowns.delete(groupKey);
+  } else {
+    body.classList.add('open');
+    header.classList.add('open');
+    openDropdowns.add(groupKey);
+  }
+}
+
+function renderAlbum() {
+  const album = document.getElementById('album');
+  let sections = [];
+
+  if (sortOrder === 'table') {
+    // Table/Class order: Intro -> Groups A-L -> Promo -> Museum
+    const introStickers = stickers.filter(s => s.type === 'intro');
+    if (shouldShowGroup('Intro', introStickers)) {
+      sections.push({ key: 'Intro', title: 'Intro', subtitle: 'p. 1-3', stickers: introStickers });
+    }
+    GROUPS.forEach(g => {
+      const groupTeams = TEAMS.filter(t => t.group === g);
+      const groupStickers = stickers.filter(s => s.group === g);
+      if (shouldShowGroup(g, groupStickers)) {
+        const pages = groupTeams[0] ? `p. ${groupTeams[0].pages.split('-')[0]}-${groupTeams[groupTeams.length-1].pages.split('-')[1]}` : '';
+        sections.push({ key: 'G'+g, title: 'Group ' + g, subtitle: pages, stickers: groupStickers, teams: groupTeams });
+      }
+    });
+    const promoStickers = stickers.filter(s => s.type === 'promo');
+    if (shouldShowGroup('Promo', promoStickers)) {
+      sections.push({ key: 'Promo', title: 'Promo', subtitle: 'p. 88-89', stickers: promoStickers });
+    }
+    const museumStickers = stickers.filter(s => s.type === 'museum');
+    if (shouldShowGroup('Museum', museumStickers)) {
+      sections.push({ key: 'Museum', title: 'Museum', subtitle: 'p. 106-109', stickers: museumStickers });
+    }
+  } else {
+    // Alphabetic order: group all stickers by team name A-Z
+    const allTeams = [...TEAMS].sort((a, b) => a.name.localeCompare(b.name));
+    allTeams.forEach(team => {
+      const teamStickers = stickers.filter(s => s.teamCode === team.code);
+      if (shouldShowGroup(team.group, teamStickers)) {
+        sections.push({ key: team.code, title: team.name, subtitle: 'Group ' + team.group + ' &middot; ' + team.pages, stickers: teamStickers, singleTeam: team });
+      }
+    });
+    // Non-team sections
+    ['Intro', 'Promo', 'Museum'].forEach(type => {
+      const typeStickers = stickers.filter(s => s.type === type.toLowerCase());
+      if (shouldShowGroup(type, typeStickers)) {
+        const pageLabels = { Intro: 'p. 1-3', Promo: 'p. 88-89', Museum: 'p. 106-109' };
+        sections.push({ key: type, title: type, subtitle: pageLabels[type], stickers: typeStickers });
+      }
+    });
+  }
+
+  // Preserve open state for sections that still exist
+  album.innerHTML = sections.map(section => renderDropdownSection(section)).join('');
+
+  // Re-open previously open dropdowns
+  openDropdowns.forEach(key => {
+    const body = document.getElementById('dropdown-body-' + key);
+    const header = document.getElementById('dropdown-header-' + key);
+    if (body && header) {
+      body.classList.add('open');
+      header.classList.add('open');
+    }
+  });
+}
+
+function renderDropdownSection(section) {
+  const key = section.key;
+  const isOpen = openDropdowns.has(key);
+  const sectionStickers = section.stickers;
+  const owned = sectionStickers.filter(s => (collection[s.code] || 0) > 0).length;
+  const total = sectionStickers.length;
+  const isComplete = owned === total && total > 0;
+
+  let bodyHtml = '';
+  if (section.teams && sortOrder === 'table') {
+    section.teams.forEach(team => {
+      const teamStickers = sectionStickers.filter(s => s.teamCode === team.code);
+      const filtered = teamStickers.filter(s => matchesSearch(s));
+      if (filtered.length === 0 && searchQuery) return;
+      bodyHtml += `<div class="team-row">
+        <div class="team-header">
+          <span style="font-size:1.2rem;">${team.flag}</span>
+          <span class="team-name">${team.name}</span>
+          <span class="team-code">${team.code}1-${team.code}20</span>
+        </div>
+        <div class="stickers-grid">${filtered.map(s => renderStickerCard(s)).join('')}</div>
+      </div>`;
+    });
+  } else if (section.singleTeam && sortOrder === 'alpha') {
+    const team = section.singleTeam;
+    const filtered = sectionStickers.filter(s => matchesSearch(s));
+    bodyHtml += `<div class="stickers-grid">${filtered.map(s => renderStickerCard(s)).join('')}</div>`;
+  } else {
+    const filtered = sectionStickers.filter(s => matchesSearch(s));
+    if (filtered.length > 0) {
+      bodyHtml += `<div class="stickers-grid">${filtered.map(s => renderStickerCard(s)).join('')}</div>`;
+    }
+  }
+
+  return `<div class="group-dropdown">
+    <div class="group-dropdown-header ${isOpen ? 'open' : ''}" id="dropdown-header-${key}" onclick="toggleDropdown('${key}')">
+      <svg class="arrow" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="group-letter">${section.title.charAt(0)}</div>
+      <div class="group-info">
+        <div class="group-name">${section.title}</div>
+        <div class="group-pages">${section.subtitle} &middot; ${total} stickers</div>
+      </div>
+      <div class="group-progress" style="${isComplete ? 'color:var(--wc-owned)' : ''}">${owned}/${total}${isComplete ? ' &#10003;' : ''}</div>
+    </div>
+    <div class="group-dropdown-body ${isOpen ? 'open' : ''}" id="dropdown-body-${key}">
+      ${bodyHtml}
+    </div>
+  </div>`;
+}
+
+function shouldShowGroup(groupName, groupStickers) {
+  if (searchQuery) return groupStickers.some(s => matchesSearch(s));
+  if (currentFilter === 'all') return true;
+  if (currentFilter === 'owned') return groupStickers.some(s => (collection[s.code] || 0) > 0);
+  if (currentFilter === 'missing') return groupStickers.some(s => (collection[s.code] || 0) === 0);
+  if (currentFilter === 'duplicates') return groupStickers.some(s => (collection[s.code] || 0) > 1);
+  if (currentFilter === 'intro') return groupName === 'Intro';
+  if (currentFilter === 'museum') return groupName === 'Museum';
+  if (currentFilter === 'promo') return groupName === 'Promo';
+  return true;
+}
+
+function renderStickerCard(s) {
+  const count = collection[s.code] || 0;
+  let cls = 'sticker-card';
+  if (count > 1) cls += ' duplicate';
+  else if (count === 1) cls += ' owned';
+  else cls += ' missing';
+  return `<div class="${cls}" data-code="${s.code}" data-dups="${count-1}" onclick="cycleSticker('${s.code}')">
+    <div class="sticker-code">${s.code}</div>
+    <div class="sticker-number">#${s.num}</div>
+    <div class="sticker-page">p.${s.page}</div>
+    <div class="sticker-actions" onclick="event.stopPropagation()">
+      <button class="sticker-action-btn own" onclick="setSticker('${s.code}',1)">Own</button>
+      <button class="sticker-action-btn dup" onclick="addDuplicate('${s.code}')">+Dup</button>
+      <button class="sticker-action-btn miss" onclick="setSticker('${s.code}',0)">Miss</button>
+    </div>
+  </div>`;
+}
+
+function matchesSearch(s) {
+  if (!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return s.code.toLowerCase().includes(q) ||
+         s.team.toLowerCase().includes(q) ||
+         s.group.toLowerCase().includes(q) ||
+         s.page.toString().includes(q) ||
+         (s.teamCode && s.teamCode.toLowerCase().includes(q));
+}
+
+function cycleSticker(code) {
+  const current = collection[code] || 0;
+  let next = current === 0 ? 1 : (current === 1 ? 2 : 0);
+  setSticker(code, next);
+}
+
+function setSticker(code, count) {
+  const old = collection[code] || 0;
+  collection[code] = count;
+  if (count === 0) delete collection[code];
+  saveToStorage();
+  renderAlbum();
+  updateStats();
+  if (count > old && count === 1) {
+    showToast('Got ' + code + '!');
+    playSound('pop');
+    checkAchievements();
+  } else if (count > old && count > 1) {
+    showToast('Duplicate ' + code + '! (' + (count-1) + ' extra)');
+    playSound('ding');
+  } else if (count < old) {
+    showToast('Removed ' + code);
+  }
+}
+
+function addDuplicate(code) {
+  const current = collection[code] || 0;
+  if (current === 0) {
+    setSticker(code, 2);
+  } else {
+    collection[code] = current + 1;
+    saveToStorage();
+    renderAlbum();
+    updateStats();
+    showToast(code + ' duplicate #' + current + '!');
+    playSound('ding');
+  }
+}
+
+function quickAdd() {
+  const input = document.getElementById('quick-add-input');
+  const codes = input.value.split(/[,\s]+/).filter(c => c.trim());
+  let added = 0, dups = 0, invalid = 0;
+  codes.forEach(code => {
+    const upper = code.toUpperCase().trim();
+    const exists = stickers.find(s => s.code === upper);
+    if (!exists) { invalid++; return; }
+    const current = collection[upper] || 0;
+    if (current === 0) { collection[upper] = 1; added++; }
+    else { collection[upper] = current + 1; dups++; }
+  });
+  saveToStorage();
+  renderAlbum();
+  updateStats();
+  input.value = '';
+  let msg = [];
+  if (added) msg.push(added + ' new');
+  if (dups) msg.push(dups + ' duplicates');
+  if (invalid) msg.push(invalid + ' invalid');
+  showToast('Added: ' + msg.join(', '));
+  playSound('pop');
+  checkAchievements();
+}
+
+function updateStats() {
+  const owned = Object.values(collection).filter(c => c > 0).length;
+  const duplicates = Object.values(collection).reduce((a, c) => a + Math.max(0, c - 1), 0);
+  const missing = 980 - owned;
+  const percent = Math.round((owned / 980) * 100);
+  document.getElementById('stat-owned').textContent = owned;
+  document.getElementById('stat-missing').textContent = missing;
+  document.getElementById('stat-duplicates').textContent = duplicates;
+  document.getElementById('stat-packs').textContent = packsOpened;
+  document.getElementById('progress-percent').textContent = percent + '%';
+  const circle = document.getElementById('progress-ring');
+  const circumference = 2 * Math.PI * 34;
+  circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
+  if (percent === 100 && owned > 0) celebrateCompletion();
+}
+
+// ===================== PACK OPENING =====================
+function openPack() {
+  const overlay = document.getElementById('pack-overlay');
+  const pack = document.getElementById('pack');
+  const stickersDiv = document.getElementById('pack-stickers');
+  const closeBtn = document.getElementById('pack-close-btn');
+  overlay.classList.add('active');
+  stickersDiv.innerHTML = '';
+  stickersDiv.classList.remove('reveal');
+  closeBtn.style.display = 'none';
+  pack.style.display = 'flex';
+  playSound('shake');
+  pack.style.animation = 'none';
+  setTimeout(() => { pack.style.animation = 'packShake 0.5s ease-in-out 3'; }, 10);
+  const packStickers = [];
+  for (let i = 0; i < 5; i++) {
+    const idx = Math.floor(Math.random() * stickers.length);
+    packStickers.push(stickers[idx]);
+  }
+  setTimeout(() => {
+    pack.style.display = 'none';
+    playSound('rip');
+    packStickers.forEach((s, i) => {
+      const current = collection[s.code] || 0;
+      const isNew = current === 0;
+      if (isNew) collection[s.code] = 1;
+      else collection[s.code] = current + 1;
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.className = 'pack-sticker-reveal';
+        div.style.animationDelay = (i * 0.15) + 's';
+        div.innerHTML = '<div class="code">' + s.code + '</div><div style="font-size:0.65rem;color:#666;margin-top:4px;">' + s.team + '</div><div class="status ' + (isNew ? 'new' : 'dup') + '">' + (isNew ? 'NEW!' : 'DUPLICATE') + '</div>';
+        stickersDiv.appendChild(div);
+        playSound(isNew ? 'pop' : 'ding');
+      }, i * 300);
+    });
+    packsOpened++;
+    saveToStorage();
+    updateStats();
+    setTimeout(() => {
+      stickersDiv.classList.add('reveal');
+      closeBtn.style.display = 'inline-flex';
+      if (packStickers.some(s => (collection[s.code] || 0) === 1)) {
+        fireConfetti();
+        showToast('New stickers found!');
+      }
+    }, 2000);
+  }, 1800);
+}
+
+function closePack() {
+  document.getElementById('pack-overlay').classList.remove('active');
+  renderAlbum();
+}
+
+// ===================== MODALS =====================
+function showModal(id) {
+  document.getElementById(id).classList.add('active');
+  if (id === 'missing-modal') renderMissingList();
+  if (id === 'trade-modal') renderTradeBoard();
+  if (id === 'export-modal') updateExportArea();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function renderMissingList() {
+  const missing = stickers.filter(s => (collection[s.code] || 0) === 0);
+  const container = document.getElementById('missing-list');
+  container.innerHTML = missing.map(s =>
+    '<div class="missing-item"><span class="code">' + s.code + '</span> &mdash; ' + s.team + ' (p.' + s.page + ')</div>'
+  ).join('') || '<p style="color:#888;text-align:center;">No missing stickers!</p>';
+}
+
+function renderTradeBoard() {
+  const have = [];
+  const need = [];
+  stickers.forEach(s => {
+    const count = collection[s.code] || 0;
+    if (count > 1) { for (let i = 0; i < count - 1; i++) have.push(s); }
+    if (count === 0) need.push(s);
+  });
+  document.getElementById('trade-have').innerHTML = have.map(s => '<span class="trade-chip have">' + s.code + '</span>').join('') || '<span style="color:#666;font-size:0.8rem;">No duplicates yet</span>';
+  document.getElementById('trade-need').innerHTML = need.map(s => '<span class="trade-chip want">' + s.code + '</span>').join('') || '<span style="color:#666;font-size:0.8rem;">Album complete!</span>';
+}
+
+function updateExportArea() {
+  const data = { collection, packsOpened, timestamp: Date.now() };
+  document.getElementById('export-area').value = JSON.stringify(data, null, 2);
+}
+
+function copyExport() {
+  const area = document.getElementById('export-area');
+  area.select();
+  document.execCommand('copy');
+  showToast('Copied to clipboard!');
+}
+
+function downloadExport() {
+  const data = { collection, packsOpened, timestamp: Date.now() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'panini-2026-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Downloaded!');
+}
+
+function importData() {
+  const text = document.getElementById('import-area').value;
+  try {
+    const data = JSON.parse(text);
+    if (data.collection) {
+      collection = data.collection;
+      packsOpened = data.packsOpened || 0;
+      saveToStorage();
+      renderAlbum();
+      updateStats();
+      showToast('Backup restored!');
+      closeModal('export-modal');
+    } else {
+      showToast('Invalid backup format');
+    }
+  } catch(e) {
+    showToast('Invalid JSON');
+  }
+}
+
+function resetAll() {
+  if (confirm('Are you sure? This will erase all your progress!')) {
+    collection = {};
+    packsOpened = 0;
+    saveToStorage();
+    renderAlbum();
+    updateStats();
+    showToast('Collection reset');
+  }
+}
+
+function printMissing() {
+  const missing = stickers.filter(s => (collection[s.code] || 0) === 0);
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(
+    '<html><head><title>Missing Stickers - Panini 2026</title>' +
+    '<style>body{font-family:Arial;padding:20px;}h1{color:#333;}ul{columns:3;list-style:none;padding:0;}li{padding:3px 0;font-size:14px;}code{color:#c5a028;font-weight:bold;}</style>' +
+    '</head><body>' +
+    '<h1>Panini World Cup 2026 - Missing Stickers</h1>' +
+    '<p>' + missing.length + ' stickers missing out of 980</p>' +
+    '<ul>' + missing.map(s => '<li><code>' + s.code + '</code> - ' + s.team + ' (p.' + s.page + ')</li>').join('') + '</ul>' +
+    '</body></html>'
+  );
+  printWindow.document.close();
+  printWindow.print();
+}
+
+// ===================== FILTERS & SEARCH =====================
+function filterStickers() {
+  searchQuery = document.getElementById('search-input').value;
+  renderAlbum();
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderAlbum();
+}
+
+function filterByTeam(teamCode) {
+  document.getElementById('search-input').value = teamCode;
+  searchQuery = teamCode;
+  renderAlbum();
+  document.querySelectorAll('.team-chip').forEach(c => c.classList.remove('active'));
+  const chip = document.querySelector('[data-team="' + teamCode + '"]');
+  if (chip) chip.classList.add('active');
+}
+
+function showView(view) {
+  setFilter(view);
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent.toLowerCase() === view);
+  });
+}
+
+// ===================== TOASTS =====================
+function showToast(message) {
+  const container = document.getElementById('toasts');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ===================== SOUND =====================
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-toggle');
+  btn.classList.toggle('muted', !soundEnabled);
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  if (type === 'pop') {
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } else if (type === 'ding') {
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.setValueAtTime(800, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } else if (type === 'shake') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(100, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(50, ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+  } else if (type === 'rip') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  }
+}
+
+// ===================== PARTICLES & CONFETTI =====================
+function createParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['var(--wc-red)', 'var(--wc-blue)', 'var(--wc-green)', 'var(--wc-gold)', 'var(--wc-orange)'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = (Math.random() * 8 + 4) + 'px';
+    p.style.height = p.style.width;
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 15 + 's';
+    p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+    container.appendChild(p);
+  }
+}
+
+function setupConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const colors = ['#E31937', '#002B7F', '#006847', '#C5A028', '#FF6B35', '#ffffff'];
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: canvas.width / 2, y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 6 + 3, rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 10,
+      gravity: 0.3, drag: 0.98, life: 1
+    });
+  }
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx; p.y += p.vy;
+      p.vy += p.gravity; p.vx *= p.drag; p.vy *= p.drag;
+      p.rotation += p.rotationSpeed;
+      p.life -= 0.008;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    });
+    if (alive) requestAnimationFrame(animate);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  animate();
+}
+
+// ===================== ACHIEVEMENTS =====================
+let shownAchievements = new Set();
+function checkAchievements() {
+  const owned = Object.values(collection).filter(c => c > 0).length;
+  const achievements = [
+    { threshold: 10, text: "First 10 Stickers!" },
+    { threshold: 50, text: "50 Stickers Collected!" },
+    { threshold: 100, text: "100 Stickers!" },
+    { threshold: 250, text: "250 Stickers!" },
+    { threshold: 500, text: "Halfway There! 500!" },
+    { threshold: 750, text: "750 Stickers! Almost!" },
+    { threshold: 900, text: "900! So Close!" },
+    { threshold: 980, text: "COMPLETE! 980!" }
+  ];
+  achievements.forEach(a => {
+    if (owned >= a.threshold && !shownAchievements.has(a.threshold)) {
+      shownAchievements.add(a.threshold);
+      showAchievement(a.text);
+      if (a.threshold >= 50) fireConfetti();
+    }
+  });
+}
+
+function showAchievement(text) {
+  const el = document.getElementById('achievement');
+  document.getElementById('achievement-text').textContent = text;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function celebrateCompletion() {
+  const el = document.getElementById('completion-celebration');
+  el.classList.add('active');
+  fireConfetti();
+  setTimeout(() => el.classList.remove('active'), 5000);
+}
+
+// ===================== KEYBOARD =====================
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    document.getElementById('pack-overlay').classList.remove('active');
+  }
+});
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
